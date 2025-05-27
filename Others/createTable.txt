@@ -1,0 +1,36 @@
+-- Create the pps_documents table
+CREATE TABLE pps_documents (
+    roworder SERIAL PRIMARY KEY,
+    doc_no CHARACTER VARYING(45),
+    ref_number CHARACTER VARYING(75),
+    doc_name CHARACTER VARYING(255),
+    creator_code CHARACTER VARYING(45),
+    department_code INTEGER,
+    description CHARACTER VARYING(355),
+    status INT,
+    create_date DATE,
+    create_time TIME,
+    create_date_time_now TIMESTAMP DEFAULT NOW()
+);
+
+-- Create the subtype_data table
+CREATE TABLE subtype_data (
+    roworder SERIAL PRIMARY KEY,
+    doc_no CHARACTER VARYING(65),
+    subtype_code INTEGER,
+    sub_type_file CHARACTER VARYING(215),
+    objective CHARACTER VARYING(215)
+);
+
+-- Create the doc_history_authorize table
+CREATE TABLE doc_history_authorize (
+    roworder SERIAL PRIMARY KEY,
+    doc_no CHARACTER VARYING(65),
+    status INT,
+    approver_code INTEGER,
+    approval_order INT,
+    remark CHARACTER VARYING(255),
+    create_date DATE,
+    create_time TIME,
+	create_date_time_now TIMESTAMP DEFAULT NOW()
+);

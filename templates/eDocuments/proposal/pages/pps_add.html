@@ -1,0 +1,758 @@
+{% extends "eDocuments/layouts/layout.html" %}
+
+{% block title %}ເພິ່ມເອກະສານຂໍສະເໜີ{% endblock %}
+
+{% block head %}
+<style>
+    header .first-btn {
+        background-color: transparent;
+        border: none;
+    }
+
+    header .second-btn {
+        background-color: transparent;
+        border: none;
+    }
+
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+    }
+
+    .modal-header .btn-close:hover {
+        filter: brightness(0.8) invert(1);
+    }
+
+    #related_list {
+        list-style: none;
+        padding-left: 0;
+    }
+</style>
+{% endblock %}
+
+{% block header %}
+<div class="d-flex justify-content-between px-3">
+    <button id="back_pps_list" onclick="window.location.href='/pps_list'" class="first-btn">
+        <i class="bi bi-chevron-left text-white"></i>
+    </button>
+    ເພິ່ມເອກະສານຂໍສະເໜີ
+    <button disabled onclick="window.location.href='/add_document'" class="second-btn">
+        <i class="bi bi-plus-circle-fill" style="color: #276FB7"></i>
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<main class="mt-2">
+    <form action="/insert_document" method="POST" enctype="multipart/form-data" class="d-flex flex-column gap-4 ">
+        <div class="form-group">
+            <label for="" class="form-label fw-medium">ຊື່ເອກະສານ</label>
+            <input name="doc_name" id="doc_name" type="text" class="form-control shadow-sm" placeholder="ປ້ອນຊື່ເອກະສານ"
+                required value="ເອກະສານເລື່ອນຕຳແໜ່ງ">
+        </div>
+
+        <div class="form-group">
+            <label for="" class="form-label fw-medium">ລະຫັດເອກະສານ</label>
+            <input name="doc_no" id="doc_no" type="text" class="form-control shadow-sm" placeholder="ປ້ອນລະຫັດ"
+                required value="IT-25010001">
+        </div>
+
+        <div class="row">
+            <div class="form-group col-6">
+                <label for="" class="form-label fw-medium">ປະເພດເອກະສານ</label>
+                <select name="doc_type" class="form-select shadow-sm" id="doc_type" name="document_type" required>
+                    <option value="" selected style="display: none;">ເລືອກປະເພດ</option>
+                    {% for data in doc_types %}
+                    <option value="{{ data['code'] }}">{{ data['name_1'] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group col-6">
+                <label for="" class="form-label fw-medium">ວັນທີ່</label>
+                <input id="doc_date" name="doc_date" type="date" class="form-control shadow-sm"
+                    style="background-color: var(--second-color); color: #fff;" placeholder="ປ້ອນລະຫັດເອກະສານ" required>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="form-group col-6">
+                <label for="" class="form-label fw-medium">ສັງກັດໜ່ວຍງານ <span
+                        class="text-danger fst-italic">(ລ໋ອກ!)</span></label>
+                <input type="text" class="form-control shadow-sm" id="department" name="department" readonly
+                    value="{{ user_data.department_name if user_data else 'ບໍ່ມີຂໍ້ມູນ!' }}">
+            </div>
+            <div class="form-group col-6">
+                <label for="" class="form-label fw-medium">ຜູ້ສ້າງເອກະສານ <span
+                        class="text-danger fst-italic">(ລ໋ອກ!)</span></label>
+                <input type="text" class="form-control shadow-sm" id="creator_name" name="creator_name" readonly
+                    value="{{ emp_data.get('emp_name', 'ບໍ່ມີຂໍ້ມູນ!') }}">
+            </div>
+        </div>
+
+        <a id="add_list" data-bs-toggle="modal" data-bs-target="#addDocumentType"
+            class="btn btn-sm text-white d-flex gap-2 align-items-center justify-content-center shadow-sm"
+            style="width: 36%; background-color: var(--second-color);">
+            <i class="bi bi-plus-circle-fill"></i>
+            <span>ເພິ່ມລາຍການ</span>
+        </a>
+
+        <!-- Add Document Type Modal -->
+        <div class="modal fade" id="addDocumentType" tabindex="-1" aria-labelledby="addLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="background-color: #f3f3f3;">
+                    <div class="modal-header text-white" style="background-color: var(--first-color);">
+                        <h5 class="modal-title" id="addLabel">ເພິ່ມເອກະສານຍ່ອຍ</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="/add_subtype" id="subtype_form">
+                            <div class="form-group mb-4">
+                                <label for="" class="form-label fw-medium">ປະເພດເອກະສານຍ່ອຍ</label>
+                                <select name="doc_subtype" id="doc_subtype" class="form-control shadow-sm" required>
+                                    <option value="" selected style="display: none;">ເລືອກປະເພດເອກະສານຍ່ອຍ</option>
+                                    <option value="" disabled class="text-danger">ເລືອກປະເພດເອກະສານກ່ອນ !</option>
+                                </select>
+                            </div>
+                            <div class="form-group mb-4">
+                                <label for="" class="form-label fw-medium">ເລືອກໄຟລ໌</label>
+                                <input type="file" id="subtype_file" name="subtype_file" class="form-control shadow-sm"
+                                    required>
+                            </div>
+                            <div class="form-group mb-4">
+                                <label for="" class="form-label fw-medium">ຈຸດປະສົງ</label>
+                                <textarea name="purpose" id="purpose" class="form-control shadow-sm"
+                                    style="height: 10rem;" placeholder="ປ້ອນຈຸດປະສົງ" required></textarea>
+                            </div>
+                        </form>
+                        <a id="send_subtype_btn" class="btn w-100 text-white"
+                            style="background-color: var(--first-color);">ບັນທຶກ</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="border rounded shadow-sm overflow-hidden my-3">
+            <table class="table mb-0" style="font-size: 14px;">
+                <thead>
+                    <tr>
+                        <th class="fw-normal " style="background-color: var(--second-color); color: #fff;">ຊື່ລາຍການ
+                        </th>
+                        <th class="fw-normal text-center align-middle"
+                            style="width: 80px; background-color: var(--second-color); color: #fff;">ລາຍລະອຽດ</th>
+                    </tr>
+                </thead>
+                <tbody id="subtype_tbody"></tbody>
+            </table>
+        </div>
+
+        <!-- subtype details -->
+        <div class="modal fade" id="listDetailModal" tabindex="-1" aria-labelledby="listDetailModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="background-color: #f3f3f3;">
+                    <div class="modal-header text-white" style="background-color: var(--first-color);">
+                        <h5 class="modal-title" id="listDetailModalLabel">ລາຍລະອຽດລາຍການ</h5>
+                        <button type="button" id="btn-close" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p id="subtype_name" class="mb-2 fw-medium">ຊື່: </p>
+                        <p id="show_file" class="mb-2 fw-medium">ໄຟລ໌: </p>
+                        <hr>
+                        <div class="form-group">
+                            <label for="" class="form-label fw-medium">ຈຸດປະສົງ</label>
+                            <textarea name="" id="subtype_purpose" class="form-control shadow-sm"
+                                style="height: 10rem; color: #555;"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="margin-top: -1rem;">
+                        <a id="btn_delete_subtype" class="btn btn-danger w-100">
+                            <i class="bi bi-trash-fill"></i> ລຶບລາຍການ
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <label for="" class="form-label fw-medium">
+                ຜູ້ກ່ຽວຂ້ອງ
+            </label>
+            <!-- <ul id="related_list" class="m-0"> -->
+            <ul id="related_list" style="list-style: none; padding-left: 0;">
+                <li class="text-danger">ເລືອກປະເພດເອກະສານ!</li>
+            </ul>
+        </div> 
+
+        <div class="form-group mt-3">
+            <label for="" class="form-label fw-medium">ເລື່ອງ</label>
+            <textarea name="" id="description" class="form-control shadow-sm" placeholder="ປ້ອນເລື່ອງ"
+                style="height: 8rem;">Lorem ipsum dolor sit amet consectetur adipisicing elit. Magnam, ipsam</textarea>
+        </div>
+
+        <div class="my-4">
+            <a onclick="getAllData()" class="btn text-white shadow-sm"
+                style="width: 100%; background-color: var(--first-color);">ບັນທຶກ</a>
+        </div>
+    </form>
+</main>
+
+<script>
+
+    // back to proposal list button
+    document.getElementById('back_pps_list').addEventListener('click', function () {
+        let doc_name = document.getElementById('doc_name').value.trim();
+        let doc_no = document.getElementById('doc_no').value.trim();
+        let doc_date = document.getElementById('doc_date').value.trim();
+        let department = document.getElementById('department').value.trim();
+        let creator_name = document.getElementById('creator_name').value.trim();
+        let description = document.getElementById('description').value.trim();
+        let doc_type = document.getElementById("doc_type").value.trim();
+        
+        const allValues = [doc_name, doc_no, doc_date, department, creator_name, description, doc_type];
+        const hasAnyValue = allValues.some(value => value !== '');
+
+        if (hasAnyValue) {
+            Swal.fire({
+                icon: 'question',
+                title: 'ຍົກເລີກ?',
+                text: 'ກົດຢຶນຢັນເພື່ອອອກຈາກການເພິ່ມຂໍ້ມູນ',
+                showCancelButton: true,
+                confirmButtonText: 'ຢຶນຢັນ',
+                confirmButtonColor: '#276FB7',
+                cancelButtonText: 'ຍົກເລີກ',
+                cancelButtonColor: '#e81a1a'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/back_pps_list', {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Failed to fetch type_code');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.message) {
+                                Swal.fire('Success', data.message, 'success');
+                            } else if (data.error) {
+                                Swal.fire('Error', 'Error: ' + data.error, 'error');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire('Error', 'An error occurred: ' + error.message, 'error');
+                        });
+                }
+            });
+        } else {
+            console.log("Exited");
+        }
+    });
+
+    // When the web page reloads, subtype details are still not deleted   
+    window.onload = function () {
+        loadData();
+        restoreDoctypeReload();
+        get_last_type_code();
+    };
+
+    // 
+    function get_last_type_code() {
+        fetch('/get_last_type_code', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch type_code');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Fetched type_code:", data.type_code);
+
+                if (data.type_code) {
+                    subytpeByDoctypeReload(data.type_code);
+                } else {
+                    console.warn("No type_code returned from server.");
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching type_code:", error);
+            });
+    }
+
+    function subytpeByDoctypeReload(docType) {
+        if (docType) {
+            fetch(`/get_doc_subtypes?type_code=${docType}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                } 
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const docSubtypeSelect = document.getElementById('doc_subtype');
+                    docSubtypeSelect.innerHTML = '<option value="" selected style="display: none;">ເລືອກປະເພດເອກະສານຍ່ອຍ</option>';
+
+                    const [docSubtypes, relatedData] = data;
+
+                    docSubtypes.forEach(subtype => {
+                        const option = document.createElement('option');
+                        option.value = subtype.code;
+                        option.textContent = subtype.name_1;
+                        docSubtypeSelect.appendChild(option);
+                    });
+
+                    const relatedPersonList = document.getElementById('related_list');
+                    relatedPersonList.innerHTML = '';
+
+                    relatedData.forEach((person, index) => {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = `${index + 1}. ${person.related_person_name}`;
+                        relatedPersonList.appendChild(listItem);
+                    });
+
+                })
+                .catch(error => {
+                    console.error('Error fetching doc subtypes:', error);
+                });
+        }
+    }
+
+    // check type_code
+    document.getElementById('doc_type').addEventListener('change', async function checkTypeCode() {
+        const doc_type = document.getElementById('doc_type').value;
+
+        let typeCodeData = null;
+
+        try {
+            const response = await fetch('/check_type_code', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.type_code) {
+                    typeCodeData = data.type_code;
+                    console.log("Loaded type_code:", typeCodeData);
+                } else {
+                    console.log("No type_code found.");
+                }
+            } else {
+                const error = await response.json();
+                console.error("Error loading type_code:", error);
+            }
+        } catch (err) {
+            console.error("Fetch Error:", err);
+        }
+
+        if (typeCodeData) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'ຄໍາເຕືອນ',
+                text: 'ຖ້າຕ້ອງການປ່ຽນປະເພດເອກະສານ, ກາລຸນາລຶບລາຍການໃນຕາຕະລາງອອກກ່ອນ!',
+                confirmButtonText: 'ຕົກລົງ',
+                confirmButtonColor: '#276FB7'
+            });
+            restoreDoctype();
+            get_last_type_code();
+        } else {
+            console.log("No type_code, process can continue.");
+        }
+    });
+
+    function restoreDoctype() {
+        const doc_type = document.getElementById('doc_type').value;
+
+        fetch('/restoreDoctype', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ doc_type: doc_type })
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Success:', data);
+
+                const selectElement = document.getElementById('doc_type');
+                for (const option of selectElement.options) {
+                    option.selected = option.value === data.code;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+
+    function restoreDoctypeReload() {
+
+        fetch('/restoreDoctypeReload', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({})
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // console.log('Success:', data);
+
+                const selectElement = document.getElementById('doc_type');
+                for (const option of selectElement.options) {
+                    option.selected = option.value === data.code;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+
+    // Get subtype data from server
+    function loadData() {
+        fetch('/subtype_get')
+            .then(response => response.json())
+            .then(data => {
+                let tbody = document.getElementById('subtype_tbody');
+                tbody.innerHTML = '';
+                data.forEach(item => {
+                    let row = document.createElement('tr');
+                    row.innerHTML = `
+                    <td class="align-middle py-0">${item.doc_type_name}</td>
+                    <td class="text-center align-middle py-0">
+                        <a id="btn_view" class="btn btn-link" data-bs-toggle="modal"
+                           data-bs-target="#listDetailModal" 
+                           data-subtype-code="${item.subtype_code}"
+                           style="background-color: transparent; border: none;">
+                            <i class="bi bi-eye-fill text-info fs-5"></i>
+                        </a>
+                    </td>
+                `;
+                    tbody.appendChild(row);
+                });
+
+                const viewButtons = document.querySelectorAll('#btn_view');
+                viewButtons.forEach(button => {
+                    button.addEventListener('click', function (event) {
+                        const subtypeCode = event.target.closest('a').getAttribute('data-subtype-code');
+                        sendSubtypeCodeToServer(subtypeCode);
+                    });
+                });
+            })
+            .catch(error => console.error('Error fetching data:', error));
+    }
+
+    function sendSubtypeCodeToServer(subtypeCode) {
+
+        fetch('/subtype_detail', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ subtype_code: subtypeCode })
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Server response:', data);
+                if (data.subtype_code) {
+                    document.getElementById('subtype_name').innerHTML = `ຊື່: <span class="fw-normal" style="color: #444;">${data.doc_type_name}</span>`;
+                    document.getElementById('show_file').innerHTML = `ໄຟລ໌: <a target="_blank" href="/static/edoc_sqlite/${data.file_name}">${data.file_name}</a>`;
+                    document.getElementById('subtype_purpose').value = data.purpose;
+
+                    document.getElementById('btn_delete_subtype').onclick = function () {
+
+                        Swal.fire({
+                            title: 'ລຶບຂໍ້ມູນ?',
+                            text: "ກົດຢຶນຢັນເພື່ອລຶບຂໍ້ມູນ!",
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#3085d6',
+                            cancelButtonColor: '#d33',
+                            cancelButtonText: 'ຍົກເລີກ',
+                            confirmButtonText: 'ຢຶນຢັນ'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                fetch('/delete_subtype', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({ subtype_code: data.subtype_code })
+                                })
+                                    .then(response => response.json())
+                                    .then(responseData => {
+                                        if (responseData.success) {
+                                            Swal.fire({
+                                                icon: 'success',
+                                                showCancelButton: false,
+                                                showConfirmButton: false,
+                                                timer: 1500,
+                                                timerProgressBar: true
+                                            }).then(() => {
+                                                document.getElementById('btn-close').click();
+                                                loadData();
+                                            });
+                                        } else {
+                                            Swal.fire(
+                                                'ບໍ່ສາມາດລຶບຂໍ້ມູນໄດ້',
+                                                'ມີບາງຢ່າງຜິດພາດ, ກາລຸນາແຈ້ງຝ່າຍດູແລລະບົບ!',
+                                                'error'
+                                            );
+                                        }
+                                    })
+                                    .catch(error => console.error('Error:', error));
+                            }
+                        });
+                    };
+                } else {
+                    console.error('Subtype not found');
+                }
+            })
+            .catch(error => console.error('Error sending data to server:', error));
+    }
+
+    // Clear data in modal
+    function clearValues() {
+
+        const selectElement = document.getElementById('doc_subtype');
+        if (selectElement) {
+            selectElement.selectedIndex = 0;
+        }
+
+        const fileInput = document.getElementById('subtype_file');
+        if (fileInput) {
+            fileInput.value = '';
+        }
+
+        const textarea = document.getElementById('purpose');
+        if (textarea) {
+            textarea.value = '';
+        }
+    }
+
+    // insert subtype to 'sqlite'
+    document.getElementById('send_subtype_btn').addEventListener('click', function () {
+        const subtypeFileInput = document.getElementById('subtype_file');
+        const formData = new FormData();
+
+        const docSubtypeValue = document.getElementById('doc_subtype').value;
+        formData.append('doc_subtype', docSubtypeValue);
+
+        const doc_type = document.getElementById('doc_type').value;
+        formData.append('doc_type', doc_type);
+
+        const selectElement = document.getElementById('doc_subtype');
+        const selectedText = selectElement.options[selectElement.selectedIndex].text;
+        formData.append('doc_subtype_display', selectedText);
+
+        formData.append('purpose', document.getElementById('purpose').value);
+
+        if (subtypeFileInput.files.length > 0) {
+            formData.append('subtype_file', subtypeFileInput.files[0]);
+        }
+
+        console.log("Doc_type name:", selectedText);
+        console.log("FormData all:", Array.from(formData.entries()));
+
+        fetch('/add_subtype', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => {
+                if (response.ok) {
+                    console.log('Data successfully sent to the server!');
+                    Swal.fire({
+                        icon: 'success',
+                        showCancelButton: false,
+                        showConfirmButton: false,
+                        timer: 1500,
+                        timerProgressBar: true
+                    });
+                    loadData();
+                    clearValues();
+                    return response.text();
+                } else {
+                    throw new Error('Failed to send data to the server');
+                }
+            })
+            .then(data => console.log('Response from server:', data))
+            .catch(error => console.error('Error:', error));
+    });
+
+    // Get date time now to 'doc_date'
+    document.addEventListener("DOMContentLoaded", function () {
+        const dateInput = document.getElementById("doc_date");
+        const today = new Date();
+        const formattedDate = today.toISOString().split("T")[0];
+        dateInput.value = formattedDate;
+    });
+
+    function subytpeByDoctype() {
+        const docType = this.value;
+
+        if (docType) {
+
+            fetch(`/get_doc_subtypes?type_code=${docType}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+
+                    const docSubtypeSelect = document.getElementById('doc_subtype');
+                    docSubtypeSelect.innerHTML = '<option value="" selected style="display: none;">ເລືອກປະເພດເອກະສານຍ່ອຍ</option>';
+
+                    const [docSubtypes, relatedData] = data;
+
+                    docSubtypes.forEach(subtype => {
+                        const option = document.createElement('option');
+                        option.value = subtype.code;
+                        option.textContent = subtype.name_1;
+                        docSubtypeSelect.appendChild(option);
+                    });
+
+                    const relatedPersonList = document.getElementById('related_list');
+                    relatedPersonList.innerHTML = '';
+
+                    relatedData.forEach((person, index) => {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = `${index + 1}. ${person.related_person_name}`;
+                        relatedPersonList.appendChild(listItem);
+                    });
+
+                })
+                .catch(error => {
+                    console.error('Error fetching doc subtypes:', error);
+                });
+        }
+    }
+
+    // Get subtypes data
+    document.getElementById('doc_type').addEventListener('change', function () {
+        const docType = this.value;
+
+        if (docType) {
+
+            fetch(`/get_doc_subtypes?type_code=${docType}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+
+                    const docSubtypeSelect = document.getElementById('doc_subtype');
+                    docSubtypeSelect.innerHTML = '<option value="" selected style="display: none;">ເລືອກປະເພດເອກະສານຍ່ອຍ</option>';
+
+                    const [docSubtypes, relatedData] = data;
+
+                    docSubtypes.forEach(subtype => {
+                        const option = document.createElement('option');
+                        option.value = subtype.code;
+                        option.textContent = subtype.name_1;
+                        docSubtypeSelect.appendChild(option);
+                    });
+
+                    const relatedPersonList = document.getElementById('related_list');
+                    relatedPersonList.innerHTML = '';
+
+                    relatedData.forEach((person, index) => {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = `${index + 1}. ${person.related_person_name}`;
+                        relatedPersonList.appendChild(listItem);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching doc subtypes:', error);
+                });
+        }
+    });
+
+    function getAllData() {
+        let doc_name = document.getElementById('doc_name').value;
+        let doc_no = document.getElementById('doc_no').value;
+        let doc_date = document.getElementById('doc_date').value;
+        let department = document.getElementById('department').value;
+        let creator_name = document.getElementById('creator_name').value;
+        let description = document.getElementById('description').value;
+        let selectElement = document.getElementById("doc_type").value;
+
+        let allData = {
+            doc_name: doc_name,
+            doc_no: doc_no,
+            doc_date: doc_date,
+            department: department,
+            creator_name: creator_name,
+            description: description,
+            doc_type: selectElement
+        };
+
+        fetch('/insert_pps', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(allData)
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(result => {
+                console.log('Response from server:', result);
+
+                if (result.success) {
+                    Swal.fire({
+                        title: 'ບັນທຶກ',
+                        text: "ບັນທຶກຂໍ້ມູນສຳເລັດແລ້ວ!",
+                        icon: 'success',
+                        showCancelButton: false,
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+                } else {
+                    Swal.fire(
+                        'ຜິດພາດ',
+                        'ບໍ່ສາມາດບັນທຶກຂໍ້ມູນ, ກາລຸນາແຈ້ງຝ່າຍພັດທະນາລະບົບ!',
+                        'error'
+                    );
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+
+                Swal.fire(
+                    'ຜິດພາດ',
+                    'ການເຊື່ອມຕໍ່ລົ້ມເຫລວ, ກາລຸນາລອງໃໝ່!',
+                    'error'
+                );
+            });
+    }
+</script>
+{% endblock %}

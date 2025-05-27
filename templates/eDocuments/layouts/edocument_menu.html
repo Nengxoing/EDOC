@@ -1,0 +1,59 @@
+{% extends "eDocuments/layouts/layout.html" %}
+
+{% block title %}ເມນູ{% endblock %}
+
+{% block head %}
+<style>
+    .menu-box {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .menu-icon {
+        font-size: 3rem;
+    } 
+ 
+    .item {
+        background-color: var(--third-color);
+        box-shadow: 2px 2px 3px var(--first-color);
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block content %} 
+<main class="d-flex flex-column gap-2">
+    <div class="menu-box">
+        <a href="/doc_list_mb" class="item text-center text-dark text-decoration-none rounded p-2 py-2 border">
+            <i class="bi bi-file-text-fill menu-icon"></i>
+            <p class="fw-bold">ເອກະສານພາຍໃນພະແນກ</p>
+        </a>
+        <!-- <a href="/pps_list" class="item text-center text-dark text-decoration-none rounded p-2 py-2 border">
+            <i class="bi bi-file-earmark-plus-fill menu-icon"></i>
+            <p class="fw-bold">ເອກະສານຂໍສະເໜີ</p>
+        </a>  -->
+        <a id="document-btn" class="item text-center text-dark text-decoration-none rounded p-2 py-2 border"> 
+            <i class="bi bi-file-earmark-plus-fill menu-icon"></i>
+            <p class="fw-bold">ເອກະສານຂໍສະເໜີ</p>
+        </a>
+        <a href="/manage_docType_pss" class="item text-center text-dark text-decoration-none rounded p-2 py-2 border">
+            <i class="bi bi-file-earmark-ruled-fill menu-icon"></i>
+            <p class="fw-bold">ຈັດການປະເພດເອກະສານ</p>
+        </a>
+    </div>
+</main>
+
+<script>
+    document.getElementById('document-btn').addEventListener('click', function(event) {
+            event.preventDefault();
+            Swal.fire({
+                icon: 'warning',
+                title: 'ຂໍອາໄພ',
+                text: 'ລະບົບນີ້ຍັງບໍ່ທັນເປີດໃຫ້ບໍລິການ!',
+                confirmButtonText: 'ຕົກລົງ',
+                confirmButtonColor: '#276FB7'
+            });
+        });
+</script>
+{% endblock %}

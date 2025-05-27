@@ -1,0 +1,137 @@
+{% extends "eDocuments/layouts/layout.html" %}
+
+{% block title %}ລາຍລະອຽດເອກະສານ{% endblock %}
+
+{% block head %}
+<style>
+    header .first-btn {
+        background-color: transparent;
+        border: none;
+    }
+ 
+    header .second-btn {
+        background-color: transparent;
+        border: none;
+    } 
+
+    .truncate {
+        display: inline-block;
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        vertical-align: top;
+    }
+</style>
+{% endblock %}
+
+{% block header %}
+<div class="d-flex justify-content-between px-3">
+    <button onclick="window.location.href='/doc_list_mb'" class="first-btn">
+        <i class="bi bi-chevron-left text-white"></i>
+    </button>
+    ລາຍລະອຽດເອກະສານ
+    <button disabled onclick="window.location.href='/add_document'" class="second-btn">
+        <i class="bi bi-plus-circle-fill" style="color: #276FB7"></i>
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<main class="mt-2">
+    <div class="card shadow-sm"> 
+        <div class="card-body">
+            <p class="card-text py-1">ລະຫັດ: <span class="text-secondary text-start">{{ get_update.doc_no }}</span></p>
+            <p class="card-text py-1">ຊື່: <span class="text-secondary text-start">{{ get_update.doc_name }}</span></p>
+            <p class="card-text py-1">ເລກທີ່ອ້າງອິງ: <span class="text-secondary text-start">{{ get_update.doc_ref }}</span></p>
+            <p class="card-text py-1">ຜູ້ສ້າງ: <span class="text-secondary text-start">{{ user_data.emp_name }}</span></p>
+            <p class="card-text py-1">ພະແນກ: <span class="text-secondary text-start">{{ user_data.department_name }}</span></p>
+            <p class="card-text py-1">ວັນທີ່ສ້າງ: <span class="text-secondary text-start">{{ get_update.doc_date }}</span></p>
+            <p class="card-text py-1">ເວລາສ້າງ: <span class="text-secondary text-start">{{ get_update.doc_time }}</span></p>
+
+            <p>ໄຟລ໌: <a class="truncate" href="{{ url_for('static', filename='edoc_files/' + get_update['file']) }}" target="_blank">{{ get_update.file }}</a>
+
+            <div class="action d-flex gap-2 mt-3">
+                <button class="btn btn-warning" id="print_report" style="width: 100%;">ພິມລາຍງານ</button>
+                <button class="btn btn-danger" id="delete_doc" style="width: 100%;">ລຶບ</button>
+                <button class="btn btn-primary" id="edit" style="width: 100%;">ແກ້ໄຂ</button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    // Fuction print
+    document.getElementById('print_report').addEventListener('click', function() {
+        window.print();
+    });
+
+    // Fuction edite card
+    document.getElementById('edit').addEventListener('click', function () {
+        const docNo = "{{ get_update.doc_no }}";
+        if (docNo) {
+            window.location.href = `/get_update/${docNo}`;
+        } else {
+            console.error("Document number not found!");
+        }
+    });
+
+    // function delete card
+    document.getElementById('delete_doc').addEventListener('click', function () {
+        const docNo = "{{ get_update.doc_no }}";
+        if (!docNo) {
+            Swal.fire({
+                title: 'ຜິດພາດ!',
+                text: 'ບໍ່ພົບເລກເອກະສານ.',
+                icon: 'error',
+                confirmButtonText: 'ຕົກລົງ'
+            });
+            return;
+        }
+
+        Swal.fire({
+            title: 'ຢືນຢັນການລຶບ?',
+            text: 'ລຶບແລ້ວບໍ່ສາມາດກູ້ຄືນໄດ້!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'ຕົກລົງ',
+            confirmButtonColor: '#0061ff',
+            cancelButtonText: 'ຍົກເລີກ',
+            cancelButtonColor: '#ff0000'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/delete_doc/${docNo}`, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'ສຳເລັດ!',
+                                text: 'ລຶບເອກະສານສຳເລັດ.',
+                                icon: 'success',
+                                confirmButtonText: 'ຕົກລົງ'
+                            }).then(() => {
+                                window.location.href = '/doc_list_mb';
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'ຜິດພາດ!',
+                                text: 'ລຶບເອກະສານຜິດພາດ.',
+                                icon: 'error',
+                                confirmButtonText: 'ຕົກລົງ'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire({
+                            title: 'ຜິດພາດ!',
+                            text: 'ມີຂໍ້ຜິດພາດໃນການລຶບ: ' + error,
+                            icon: 'error',
+                            confirmButtonText: 'ຕົກລົງ',
+                            confirmButtonColor: '#0061ff'
+                        });
+                    });
+            }
+        });
+    });
+</script>
+{% endblock %}

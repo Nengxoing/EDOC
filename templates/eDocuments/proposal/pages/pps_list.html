@@ -1,0 +1,201 @@
+{% extends "eDocuments/layouts/layout.html" %}
+
+{% block title %}ລາຍການເອກະສານຂໍສະເໜີ{% endblock %}
+
+{% block head %}
+<style>
+    .card-box {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .card-item {
+        width: 100%;
+        text-align: start;
+        background-color: var(--third-color);
+        line-height: 1.5rem;
+    }
+
+    header button {
+        background-color: transparent;
+        border: none;
+    }
+
+    .dropdown-toggle::after {
+        display: none !important;
+    }
+</style>
+{% endblock %}
+
+{% block header %}
+<div class="d-flex justify-content-between px-3">
+    <button onclick="window.location.href='/edocument_menu'" class="first-btn">
+        <i class="bi bi-chevron-left text-white"></i>
+    </button>
+    ລາຍການເອກະສານຂໍສະເໜີ
+    <div class="dropdown">
+        <button class="btn p-0 border-0 bg-transparent dropdown-toggle" type="button" id="dropdownMenuButton"
+            data-bs-toggle="dropdown" aria-expanded="false" style="position: relative;">
+            <i class="bi bi-three-dots-vertical text-white"></i>
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton" style="line-height: 2rem;">
+            <li><a class="dropdown-item" href="/pps_add">ເພິ່ມເອກະສານຂໍສະເໜີ</a></li>
+            <li><a class="dropdown-item" href="/manage_related">ຈັດການຜູ້ກ່ຽວຂ້ອງ</a></li>
+            <li><a class="dropdown-item" href="/manage_docType">ຈັດການປະເພດເອກະສານ</a></li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<main class="d-flex flex-column gap-3 mt-2">
+    <div class="filter-box d-flex flex-column gap-3">
+        <div class="date-filter row">
+            <div class="form-group col-6">
+                <label for="" class="form-label fw-medium">ຈາກວັນທີ່</label>
+                <input type="date" id="from_filter" class="form-control shadow-sm">
+            </div>
+            <div class="form-group col-6">
+                <label for="" class="form-label fw-medium">ເຖິງວັນທີ່</label>
+                <input type="date" id="to_filter" class="form-control shadow-sm">
+            </div>
+        </div>
+
+        <div class="date-filter row">
+            <div class="form-group col-6">
+                <label for="" class="form-label fw-medium">ພະແນກ</label>
+                <select name="" id="department" class="form-select shadow-sm">
+                    <option value="" selected style="display: none;">ເລືອກພະແນກ</option>
+                    {% for data in departments %}
+                    <option value="{{ data['name_1'] }}">{{ data['name_1'] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group col-6">
+                <label for="" class="form-label fw-medium">ປະເພດເອກະສານ</label>
+                <select name="" id="doc_type" class="form-select shadow-sm">
+                    <option value="" selected style="display: none;">ເລືອກປະເພດເອກະສານ</option>
+                    {% for data in doc_types %}
+                    <option value="{{ data['name_1'] }}">{{ data['name_1'] }}</option>
+                    {% endfor %}
+                </select> 
+            </div>
+        </div>
+
+        <div class="input-group shadow-sm">
+            <input type="text" class="form-control" id="search" aria-describedby="inputGroupFileAddon04"
+                aria-label="Upload" placeholder="ຄົ້ນຫາຕາມລາຍຊື່">
+            <button class="btn text-white " type="button" id="reset_all"
+                style="background-color: var(--second-color);">ຣີເຊັດທັງໝົດ</button>
+        </div>
+    </div>
+
+    <div class="card-box d-flex flex-column gap-3 shadow-sm" id="card-box">
+        {% for data in pps_data %}
+        <button id="card-item" class="card-item shadow-sm rounded border p-2"
+            data-department="{{ data['department_name'] }}" data-doc-name="{{ data['doc_name'] }}"
+            data-doc-type="{{ data['document_type_name'] }}" data-doc-date="{{ data['doc_date'] }}"
+            data-creator="{{ data['creator_name'] }}">
+            <p hidden>ລະຫັດ: <span class="text-secondary">{{ data['doc_no'] }}</span></p>
+            <p>ຊື່: <span class="text-secondary">{{ data['doc_name'] }}</span></p>
+            <p>ປະເພດ: <span class="text-secondary">{{ data['doc_type_name'] }}</span></p>
+            <p>ຜູ້ສ້າງ: <span class="text-secondary">{{ data['emp_name'] }}</span></p>
+            <p>ພະແນກ: <span class="text-secondary">{{ data['department_name'] }}</span></p>
+            <p>ວັນທີ່ສ້າງ: <span id="card_date" class="text-secondary">{{ data['doc_date'] }}</span></p>
+
+            <p>ສະຖານະ: {{ data['status'] }}</span></p>
+        </button>
+        {% endfor %}
+    </div>
+</main>
+
+<script>
+    // go to update page
+    document.querySelectorAll('.card-item').forEach(item => {
+        item.addEventListener('click', function () {
+            const docNo = item.querySelector('span.text-secondary').innerText;
+            window.location.href = `/doc_detail/${docNo}`;
+        });
+    });
+ 
+    // document.addEventListener('DOMContentLoaded', function () {
+    //     const currentDate = new Date().toISOString().split('T')[0];
+    //     document.getElementById('from_filter').value = currentDate;
+    //     document.getElementById('to_filter').value = currentDate;
+
+    //     const cards = document.querySelectorAll('.card-item');
+    //     const fromFilter = document.getElementById('from_filter');
+    //     const toFilter = document.getElementById('to_filter');
+    //     const departmentFilter = document.getElementById('department');
+    //     const docTypeFilter = document.getElementById('doc_type');
+    //     const searchFilter = document.getElementById('search');
+    //     const resetButton = document.getElementById('reset_all');
+
+    //     function ddmmyyyy(date) {
+    //         const d = new Date(date);
+    //         const day = String(d.getDate()).padStart(2, '0');
+    //         const month = String(d.getMonth() + 1).padStart(2, '0');
+    //         const year = d.getFullYear();
+    //         return `${day}/${month}/${year}`;
+    //     }
+    //     cards.forEach(card => {
+    //         const cardDate = (card.querySelector('#card_date').textContent.trim());
+    //         const fromDate = ddmmyyyy(fromFilter.value);
+    //         const toDate = ddmmyyyy(toFilter.value);
+
+    //         const dateMatch = cardDate >= fromDate && cardDate <= toDate;
+
+    //         if (dateMatch) {
+    //             card.style.display = 'block';
+    //         } else {
+    //             card.style.display = 'none';
+    //         }
+    //     });
+
+    //     function filterCards() {
+    //         const fromDate = ddmmyyyy(fromFilter.value);
+    //         const toDate = ddmmyyyy(toFilter.value);
+    //         const departmentValue = departmentFilter.value.toLowerCase();
+    //         const docTypeValue = docTypeFilter.value.toLowerCase();
+    //         const searchValue = searchFilter.value.toLowerCase();
+
+    //         console.log(`Filtering cards from ${fromDate} to ${toDate}`);
+
+    //         cards.forEach(card => {
+    //             const cardDate = (card.getAttribute('data-doc-date'));
+    //             const cardDepartment = card.getAttribute('data-department').toLowerCase();
+    //             const cardDocType = card.getAttribute('data-doc-type').toLowerCase();
+    //             const cardName = card.getAttribute('data-doc-name').toLowerCase();
+    //             const dateMatch = cardDate >= fromDate && cardDate <= toDate;
+    //             const departmentMatch = departmentValue ? cardDepartment.includes(departmentValue) : true;
+    //             const docTypeMatch = docTypeValue ? cardDocType.includes(docTypeValue) : true;
+    //             const searchMatch = searchValue ? cardName.includes(searchValue) : true;
+
+    //             if (dateMatch && departmentMatch && docTypeMatch && searchMatch) {
+    //                 card.style.display = 'block';
+    //             } else {
+    //                 card.style.display = 'none';
+    //             }
+    //         });
+    //     }
+
+    //     fromFilter.addEventListener('input', filterCards);
+    //     toFilter.addEventListener('input', filterCards);
+    //     departmentFilter.addEventListener('change', filterCards);
+    //     docTypeFilter.addEventListener('change', filterCards);
+    //     searchFilter.addEventListener('input', filterCards);
+
+    //     resetButton.addEventListener('click', function () {
+    //         fromFilter.value = currentDate;
+    //         toFilter.value = currentDate;
+    //         departmentFilter.value = '';
+    //         docTypeFilter.value = '';
+    //         searchFilter.value = '';
+    //         filterCards();
+    //     });
+
+    //     filterCards();
+    // });
+</script>
+{% endblock %}

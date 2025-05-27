@@ -1,0 +1,401 @@
+{% extends "eDocuments/layouts/layout.html" %} {% block title
+%}ຈັດການປະເພດເອກະສານ{% endblock %} {% block head %}
+<style>
+  .card-box {
+    max-height: 400px;
+    overflow-y: auto;
+  }z
+
+  .card-item {
+    width: 100%;
+    text-align: start;
+    background-color: var(--third-color);
+    line-height: 1.5rem;
+  }
+
+  header button {
+    background-color: transparent;
+    border: none;
+  }
+
+  .dropdown-toggle::after {
+    display: none !important;
+  }
+
+  #list_group li {
+    list-style: none;
+  }
+</style>
+{% endblock %} {% block header %}
+<div class="d-flex justify-content-between px-3">
+  <button onclick="window.location.href='/pps_list'" class="first-btn">
+    <i class="bi bi-chevron-left text-white"></i>
+  </button>
+  ຈັດການປະເພດເອກະສານ
+  <button
+    disabled
+    onclick="window.location.href='/add_document'"
+    class="second-btn"
+  >
+    <i class="bi bi-plus-circle-fill" style="color: #276fb7"></i>
+  </button>
+</div>
+{% endblock %} {% block content %}
+<main class="d-flex justify-content-between flex-column gap-4 mt-2">
+  <div class="form-group mt-2">
+    <label for="" class="form-label fw-medium">ເພິ່ມປະເພດເອກະສານ</label>
+    <div class="input-group">
+      <input
+        id="docTypeText"
+        type="text"
+        class="form-control shadow-sm"
+        placeholder="ປ້ອນປະເພດເອກະສານ"
+      />
+      <button
+        id="btnAddDocType"
+        class="btn text-white fw-medium shadow-sm"
+        style="background-color: var(--second-color); width: 20%"
+      >
+        ເພິ່ມ
+      </button>
+    </div>
+  </div>
+
+  <div class="form-group mt-2">
+    <label for="docType_code" class="form-label fw-medium"
+      >ຈັດການປະເພດເອກະສານຍ່ອຍ</label
+    >
+    <div class="input-group">
+      <select name="" id="docType_code" class="form-select shadow-sm">
+        <option value="" selected class="d-none" style="display: none">
+          ເລືອກປະເພດເອກະສານ
+        </option>
+        {% for data in docType_data %}
+        <option value="{{ data['doc_type_code'] }}" data-name="{{ data['doc_type_name'] }}">
+          {{ data['doc_type_name'] }}
+        </option>
+        {% endfor %}
+      </select>
+      <a
+        type="button"
+        id="deleteDocType"
+        class="btn text-white"
+        style="width: 20%; background-color: var(--second-color)"
+      >
+        ລຶບ
+      </a>
+    </div>
+  </div>
+
+  <div class="form-group mt-2">
+    <label for="" class="form-label fw-medium">ເພິ່ມປະເພດເອກະສານຍ່ອຍ</label>
+    <div class="input-group">
+      <input
+        type="text"
+        id="subtype_text"
+        class="form-control shadow-sm"
+        placeholder="ປ້ອນປະເພດເອກະສານຍ່ອຍ"
+      />
+      <a
+        id="add_subtype"
+        class="btn text-white shadow-sm"
+        type="button"
+        style="background-color: var(--second-color); width: 20%"
+        >ເພິ່ມ</a
+      >
+    </div>
+  </div>
+
+  <div
+    class="table-container border shadown-sm rounded mt-2"
+    style="height: 30vh; overflow: hidden; overflow-y: scroll;"
+  >
+    <table class="table mb-0">
+      <thead style="position: sticky; top: 0;">
+        <tr>
+          <th
+            class="fw-normal"
+            style="background-color: var(--second-color); color: #fff"
+          >
+            ຊື່ເອກະສານຍ່ອຍ
+          </th>
+          <th
+            class="fw-normal"
+            style="
+              background-color: var(--second-color);
+              color: #fff;
+              width: 60px;
+              text-align: center;
+            "
+          >
+            ລຶບ
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="text-center text-danger" colspan="2">
+            ກາລຸນາເລືອກປະເພດເອກະສານ!
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<script>
+  //   delete  document type
+  document
+    .getElementById("deleteDocType")
+    .addEventListener("click", function () {
+      const select = document.getElementById("docType_code");
+      const selectedOption = select.options[select.selectedIndex];
+
+      if (!selectedOption.value) {
+        Swal.fire({
+          icon: "warning",
+          title: "ກະລຸນາເລືອກປະເພດເອກະສານກ່ອນ",
+          confirmButtonText: "ຕົກລົງ",
+          confirmButtonColor: "#3085d6",
+        });
+        return;
+      }
+
+      Swal.fire({
+        icon: "warning",
+        title: "ຢືນຢັນການລຶບ",
+        text: `ຕ້ອງການລຶບ "${selectedOption.dataset.name}" ຫຼືບໍ່?`,
+        showCancelButton: true,
+        confirmButtonText: "ຕົກລົງ",
+        cancelButtonText: "ຍົກເລີກ",
+        confirmButtonColor: "#276FB7",
+        cancelButtonColor: "#d33",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch("/manageDocType", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              action: "delete",
+              docType_code: selectedOption.value,
+            }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                selectedOption.remove();
+                Swal.fire("ສຳເລັດ!", "ປະເພດເອກະສານຖືກລຶບແລ້ວ", "success");
+              } else {
+                Swal.fire("ຜິດພາດ!", data.message, "error");
+              }
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              Swal.fire("ຜິດພາດ!", "ການລຶບຜິດພາດ", "error");
+            });
+        }
+      });
+    });
+
+  //   insert document type
+  document
+    .getElementById("btnAddDocType")
+    .addEventListener("click", function () {
+      const docType_text = document.getElementById("docTypeText").value.trim();
+
+      if (!docType_text) {
+        console.error("Missing required data!");
+        Swal.fire({
+          icon: "warning",
+          title: "ກາລຸນາປ້ອນປະເພດເອກະສານກ່ອນ!",
+          confirmButtonText: "ຕົກລົງ",
+          confirmButtonColor: "#3085d6",
+        });
+        return;
+      }
+
+      fetch("/manageDocType", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "insert",
+          docType_text: docType_text,
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            Swal.fire({
+              icon: "success",
+              title: "ເພີ່ມປະເພດເອກະສານສຳເລັດ",
+              confirmButtonText: "ຕົກລົງ",
+              confirmButtonColor: "#3085d6",
+            }).then(() => {
+              location.reload();
+            });
+          } else {
+            throw new Error(data.message || "Unknown error occurred");
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          Swal.fire({
+            icon: "error",
+            title: "ມີຂໍ້ຜິດພາດ",
+            text: error.message,
+            confirmButtonText: "ຕົກລົງ",
+            confirmButtonColor: "#d33",
+          });
+        });
+    });
+
+  document
+    .getElementById("add_subtype")
+    .addEventListener("click", function add_subtype() {
+      const docType_code = document.getElementById("docType_code").value;
+      const subtype_text = document.getElementById("subtype_text").value;
+
+      if (!docType_code || !subtype_text) {
+        console.error("Missing required data!");
+        Swal.fire({
+          icon: "warning",
+          title: "ກາລຸນາປ້ອນຂໍ້ມູນໃຫ້ຄົບ",
+          confirmButtonText: "ຕົກລົງ",
+          confirmButtonColor: "#3085d6",
+        });
+        return;
+      }
+
+      fetch("/get_data", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          docType_code: docType_code,
+          subtype_text: subtype_text,
+        }),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          console.log("Data from server:", data);
+          if (data.success) {
+            updateTable(data.data);
+            clearValues();
+          } else {
+            Swal.fire({
+              icon: "error",
+              title: "Something went wrong!",
+              text: data.message,
+              confirmButtonText: "Ok",
+              confirmButtonColor: "#d33",
+            });
+          }
+        })
+        .catch((error) =>
+          console.error("Error sending data to server:", error)
+        );
+
+      console.log("docType_code:", docType_code);
+      console.log("subtype_text:", subtype_text);
+    });
+
+  function deleteSubtype(subtypeCode) {
+    const docType_code = document.getElementById("docType_code").value;
+    Swal.fire({
+      title: "ລຶບຂໍ້ມູນ?",
+      text: "ກະລຸນາກົດຢືນຢັນເພື່ອລຶບ",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "ຢືນຢັນ",
+      cancelButtonText: "ຍົກເລີກ",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch("/del_subtype", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            subtypeCode: subtypeCode,
+            docType_code: docType_code,
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              updateTable(data.allData);
+            } else {
+              Swal.fire("ຜິດພາດ!", "ມີຫົວຂໍ້ຫຼືປັນຫາອື່ນ.", "error");
+            }
+          })
+          .catch((error) => console.error("Error deleting subtype:", error));
+      }
+    });
+  }
+
+  function updateTable(subtype_data) {
+    const tableBody = document.querySelector(".table tbody");
+    tableBody.innerHTML = "";
+
+    if (subtype_data.length === 0) {
+      tableBody.innerHTML = `<tr><td class="text-center text-danger" colspan="2">ບໍ່ມີລາຍການເອກະສານຍ່ອຍ!</td></tr>`;
+      return;
+    }
+
+    subtype_data.forEach((subtype) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+            <td class="py-0 my-0 align-middle">${subtype.name_1}</td>
+            <td class="py-0 my-0 text-center">
+                <a class="btn align-middle" onclick="deleteSubtype('${subtype.code}')"><i class="bi bi-trash-fill text-danger"></i></a>
+            </td>
+        `;
+      tableBody.appendChild(row);
+    });
+  }
+
+  document
+    .getElementById("docType_code")
+    .addEventListener("change", function docType_code() {
+      const docType_code = document.getElementById("docType_code").value;
+      if (!docType_code) return;
+
+      fetch("/get_subtype", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ docType_code: docType_code }),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          console.log("Data from server:", data);
+          updateTable(data.allData);
+          clearValues();
+        })
+        .catch((error) =>
+          console.error("Error sending data to server:", error)
+        );
+    });
+
+  function clearValues() {
+    document.getElementById("subtype_text").value = "";
+  }
+</script>
+
+{% endblock %}

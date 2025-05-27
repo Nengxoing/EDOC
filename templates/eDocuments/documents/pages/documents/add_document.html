@@ -1,0 +1,266 @@
+{% extends "eDocuments/layouts/layout.html" %}
+
+{% block title %}ເພິ່ມເອກະສານ{% endblock %}
+
+{% block head %}
+<style>
+    header .first-btn {
+        background-color: transparent;
+        border: none;
+    }
+
+    header .second-btn {
+        background-color: transparent;
+        border: none;
+    }
+</style>
+{% endblock %}
+ 
+{% block header %}
+<div class="d-flex justify-content-between px-3">
+    <button id="doc_list_mb" onclick="window.location.href='/doc_list_mb'" class="first-btn">
+        <i class="bi bi-chevron-left text-white"></i>
+    </button>
+    ເພິ່ມເອກະສານ
+    <button disabled onclick="window.location.href='/add_document'" class="second-btn">
+        <i class="bi bi-plus-circle-fill" style="color: #276FB7"></i>
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<main class="mt-2">
+    <form action="/insert_document" method="POST" enctype="multipart/form-data" class="d-flex flex-column gap-4">
+        <div class="form-group">
+            <label for="" class="form-label fw-medium">ຊື່ເອກະສານ</label>
+            <input name="doc_name" type="text" class="form-control shadow-sm" placeholder="ປ້ອນຊື່ເອກະສານ" required>
+        </div>
+        <div class="form-group">
+            <label for="" class="form-label fw-medium">ອັບໂຫຼດໄຟລ໌</label>
+            <input name="file" type="file" class="form-control shadow-sm" id="reference_number" name="reference_number"
+                placeholder="ປ້ອນເລກອ້າງອິງ" required>
+        </div>
+        <div class="row">
+            <div class="form-group col-6">
+                <label for="" class="form-label fw-medium">ລະຫັດເອກະສານ</label>
+                <input name="doc_no" type="text" class="form-control shadow-sm" placeholder="ປ້ອນລະຫັດ" required>
+            </div>
+            <div class="form-group col-6">
+                <label for="" class="form-label fw-medium">ວັນທີ່</label>
+                <input id="doc_date" name="doc_date" type="date" class="form-control shadow-sm text-white"
+                    placeholder="ປ້ອນລະຫັດເອກະສານ" required style="background-color: var(--second-color);">
+            </div>
+        </div>
+        <div class="row">
+            <div class="form-group col-6">
+                <label for="" class="form-label fw-medium">ປະເພດເອກະສານ</label>
+                <select name="doc_type" class="form-select shadow-sm text-white" id="doc_type" name="document_type"
+                    required style="background-color: var(--second-color);">
+                    <option value="" selected style="display: none;">ເລືອກປະເພດ</option>
+                    {% for data in doc_types %}
+                    <option value="{{ data['code'] }}">{{ data['name_1'] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group col-6">
+                <label for="" class="form-label fw-medium">ເລກເອກະສານອ້າງອີງ</label>
+                <input name="doc_ref" type="text" class="form-control shadow-sm" id="reference_number"
+                    placeholder="ປ້ອນເລກອ້າງອິງ" required>
+            </div>
+        </div> 
+
+        <div class="form-group">
+            <label for="" class="label fw-medium mb-1">ຈຳກັດການມອງເຫັນຂອງແຕ່ລະພະແນກ</label>
+            <div class="input-group">
+                <select name="" id="choose_dept" class="form-control shadow-sm">
+                    <option value="" selected style="display: none;">ເລືອກພະແນກ</option>
+                    {% for data in department %}
+                    <option value="{{ data['code'] }}">{{ data['name_1'] }}</option>
+                    {% endfor %}
+                </select>
+                <a id="btn_choose_dept" class="btn text-white fw-medium shadow-sm"
+                    style="background-color: var(--second-color);">ເພິ່ມ</a>
+            </div>
+        </div>
+
+        <div class="choosed-dept overflow-hidden rounded border shadow-sm">
+            <table id="choosed-dept-data" class="table table-hover table-striped table-bordered mb-0">
+                <thead>
+                    <tr>
+                        <th class="fw-medium">ພະແນກທີ່ສາມາດມອງເຫັນເອກະສານໄດ້</th>
+                        <th class="fw-medium" style="width: 80px; text-align: center;">ຈັດການ</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+            </table>
+        </div>
+
+        <div class="form-group">
+            <label for="" class="form-label fw-medium">ພະແນກ <span class="text-danger fst-italic">(ລ໋ອກ)</span></label>
+            <input type="text" class="form-control shadow-sm" id="department" name="department" readonly
+                value="{{ user_data.department_name if user_data else 'ບໍ່ມີຂໍ້ມູນ!' }}">
+        </div>
+
+        <div class="form-group">
+            <label for="" class="form-label fw-medium">ຜູ້ສ້າງເອກະສານ <span
+                    class="text-danger fst-italic">(ລ໋ອກ)</span></label>
+            <input type="text" class="form-control shadow-sm" id="creator_name" name="creator_name" readonly
+                value="{{ user_data.emp_name if user_data else 'ບໍ່ມີຂໍ້ມູນ!' }}">
+        </div>
+        <div class="mb-3">
+            <button type="submit" class="btn shadow-sm text-white fw-medium"
+                style="width: 100%; background-color: var(--first-color);">ບັນທຶກ</button>
+        </div>
+    </form>
+</main>
+
+<script>
+    document.getElementById('doc_list_mb').addEventListener('click', function () {
+        fetch('/delete_department_all', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                emp_code: '12345'
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const dateInput = document.getElementById("doc_date");
+        const today = new Date();
+        const formattedDate = today.toISOString().split("T")[0];
+        dateInput.value = formattedDate;
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        fetchDepartments();
+    });
+
+    document.getElementById('btn_choose_dept').addEventListener('click', function () {
+        const deptCodeInput = document.getElementById('choose_dept');
+        const dept_code = deptCodeInput.value;
+        const dept_text = deptCodeInput.options[deptCodeInput.selectedIndex].text;
+
+        if (!dept_code) {
+            console.error('Error: Department code is empty.');
+            return;
+        }
+
+        // console.log('Selected department code:', dept_code);
+        // console.log('Selected department name:', dept_text);
+
+        fetch('/post_department', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ dept_code: dept_code, dept_text: dept_text })
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok: ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // console.log('Success:', data);
+
+                fetchDepartments();
+                deptCodeInput.value = '';
+            })
+            .catch(error => {
+                // console.error('Error:', error);
+            });
+    });
+
+    // Fetch and display all departments in the table
+    function fetchDepartments() {
+        fetch('/get_departments', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch departments: ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const tableBody = document.getElementById('choosed-dept-data').getElementsByTagName('tbody')[0];
+                const table = document.getElementById('choosed-dept-data');
+
+                tableBody.innerHTML = '';
+
+                if (data.departments.length > 0) {
+                    table.style.display = 'table';
+                    data.departments.forEach(department => {
+                        const row = tableBody.insertRow();
+                        const cellName = row.insertCell(0);
+                        const cellAction = row.insertCell(1);
+
+                        cellName.classList.add('align-middle');
+                        cellName.style.color = '#555';
+                        cellAction.classList.add('align-middle', 'text-center');
+
+                        cellName.textContent = department[1];
+
+                        const deleteButton = document.createElement('a');
+                        deleteButton.classList.add('btn', 'p-0', 'btn-sm', 'd-flex', 'align-items-center', 'justify-content-center');
+                        deleteButton.innerHTML = `<i class="bi bi-trash-fill text-danger fs-5"></i>`;
+                        deleteButton.addEventListener('click', function () {
+                            deleteDepartment(department[0]);
+                        });
+
+                        cellAction.appendChild(deleteButton);
+                    });
+                } else {
+                    table.style.display = 'none';
+                    // alert('No departments available.');
+                }
+
+            })
+            .catch(error => {
+                console.error('Error fetching departments:', error);
+            });
+    }
+
+    // Delete a department by its code
+    function deleteDepartment(deptCode) {
+
+        fetch('/delete_department', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ dept_code: deptCode })
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to delete department: ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // console.log('Delete Success:', data);
+
+                fetchDepartments();
+            })
+            .catch(error => {
+                // console.error('Error deleting department:', error);
+            });
+    }
+</script>
+{% endblock %}
